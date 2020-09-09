@@ -1,9 +1,9 @@
 import numpy as np
 from copy import deepcopy
 
-class Tiling2D: #Tiling is asymmetric, 4 in x, 2 in v
+class Tiling2D: #Tiling is asymmetric.
 
-    def __init__(self, alpha = 0.1/8, xmin=-1.2, xmax=0.5, vmin=-0.07, vmax=0.07, numBlocks = 8, numActions=3):
+    def __init__(self, alpha = 0.1/8, xmin=-1.2, xmax=0.5, vmin=-0.07, vmax=0.07, numTilings=7, numBlocks=8, numActions=3):
         self.alpha = alpha
 
         self.xmin = xmin
@@ -11,29 +11,27 @@ class Tiling2D: #Tiling is asymmetric, 4 in x, 2 in v
         self.vmin = vmin
         self.vmax = vmax
         self.numBlocks = numBlocks
-        self.numTilings = 8
+        self.numTilings = numTilings
         self.numActions = numActions
         
         self.xBlockSize = (xmax - xmin)/numBlocks
         self.vBlockSize = (vmax - vmin)/numBlocks
-        
-        self.xNumOffsets = 4
-        self.vNumOffsets = 2
-        
-        self.xOffset = self.xBlockSize/self.xNumOffsets
-        self.vOffset = self.vBlockSize/self.vNumOffsets
-        
+                
         self.weights = []
         for a in range(numActions):
             actionWeights = []
-            for xTiling in range(self.xNumOffsets):
-                xTilingWeights = []
-                for vTiling in range(self.vNumOffsets):
-                    vTilingWeights = np.zeros([numBlocks+1, numBlocks+1], dtype='float64')
-                    xTilingWeights.append(deepcopy(vTilingWeights))
-                actionWeights.append(deepcopy(xTilingWeights))
+            for tiling in range(self.numTilings):
+                tilingWeights = np.zeros([numBlocks+1, numBlocks+1], dtype='float64')
+                actionWeights.append(deepcopy(tilingWeights))
             self.weights.append(deepcopy(actionWeights))
-                    
+    
+
+    def getOffset(self, tilingNum):
+        vOffset = self.vBlockSize * ((tilingNum % self.numTilings) / float(self.numTilings))
+        xOffset = self.xBlockSize * ((2*tilingNum) % self.numTilings) / float(self.numTilings) #Assymetry here
+        
+        return xOffset, vOffset
+
 
     def getTilingIndex(self, x, v):
         i = int(x/self.xBlockSize)
@@ -51,12 +49,10 @@ class Tiling2D: #Tiling is asymmetric, 4 in x, 2 in v
         v = v - self.vmin #This is to rebase the coordinate systems
 
         fullIndex = []
-        for xTiling in range(self.xNumOffsets):
-            xInds = []
-            for vTiling in range(self.vNumOffsets):
-                vInds = self.getTilingIndex(x + self.xOffset*xTiling, v + self.vOffset*vTiling)
-                xInds.append(deepcopy(vInds))
-            fullIndex.append(deepcopy(xInds))
+        for i in range(self.numTilings):
+            xOffset, vOffset = self.getOffset(i)
+            fullIndex.append(self.getTilingIndex(x + xOffset, v + vOffset))
+
         return fullIndex
 
 
@@ -64,20 +60,21 @@ class Tiling2D: #Tiling is asymmetric, 4 in x, 2 in v
         fi = self.getFullIndex(x, v)
         
         w = []
-        for xTiling in range(self.xNumOffsets):
-            for vTiling in range(self.vNumOffsets):
-                ind = fi[xTiling][vTiling]
-                w.append(self.weights[actionIndex][xTiling][vTiling][ind[0], ind[1]]) # Get the correct block from the tiling
+        for tiling in range(self.numTilings):
+                ind = fi[tiling]
+                w.append(self.weights[actionIndex][tiling][ind[0], ind[1]]) # Get the correct block from the tiling
         
         return sum(w)/len(w)
         
 
     def moveVal(self, x, v, actionIndex, target):
         fi = self.getFullIndex(x, v)
-       
-        for xTiling in range(self.xNumOffsets):
-            for vTiling in range(self.vNumOffsets):
-                ind = fi[xTiling][vTiling]
-                self.weights[actionIndex][xTiling][vTiling][ind[0], ind[1]] += self.alpha*(target - self.weights[actionIndex][xTiling][vTiling][ind[0], ind[1]])
+        
+        w = []
+        for tiling in range(self.numTilings):
+                ind = fi[tiling]
+                self.weights[actionIndex][tiling][ind[0], ind[1]] += self.alpha*(target - self.weights[actionIndex][tiling][ind[0], ind[1]])
         
         return None
+
+
