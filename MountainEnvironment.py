@@ -20,7 +20,11 @@ class MountainEnvironment:
         self.v = min(0.07, self.v)
          
     
-    def update(self, throttle):
+    def move(self, state=None, throttle=0):
+        if type(state) != type(None):
+            self.x = state[0]
+            self.v = state[1]
+
         self.v += 0.001*throttle - 0.0025*np.cos(3*self.x) # See book description
         self.x += self.v
         self.bound()
@@ -28,6 +32,6 @@ class MountainEnvironment:
             reward = 0
         else:
             reward = -1
-        return self.x, self.v, reward
+        return (self.x, self.v), reward
 
 

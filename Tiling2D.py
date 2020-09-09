@@ -33,31 +33,31 @@ class Tiling2D: #Tiling is asymmetric.
         return xOffset, vOffset
 
 
-    def getTilingIndex(self, x, v):
-        i = int(x/self.xBlockSize)
-        j = int(v/self.vBlockSize)
+    def getTilingIndex(self, state):
+        i = int(state[0]/self.xBlockSize)
+        j = int(state[1]/self.vBlockSize)
         return i, j
     
 
-    def getFullIndex(self, x, v):
-        x = max(x, self.xmin)
+    def getFullIndex(self, state):
+        x = max(state[0], self.xmin)
         x = min(x, self.xmax)
         x = x - self.xmin
         
-        v = max(v, self.vmin)
+        v = max(state[1], self.vmin)
         v = min(v, self.vmax)
         v = v - self.vmin #This is to rebase the coordinate systems
 
         fullIndex = []
         for i in range(self.numTilings):
             xOffset, vOffset = self.getOffset(i)
-            fullIndex.append(self.getTilingIndex(x + xOffset, v + vOffset))
+            fullIndex.append(self.getTilingIndex((x + xOffset, v + vOffset)))
 
         return fullIndex
 
 
-    def getVal(self, x, v, actionIndex): #actionIndex is 0, 1, or 2; conversion to action is in the agent, not the dictionary. 
-        fi = self.getFullIndex(x, v)
+    def getVal(self, state, actionIndex): #actionIndex is 0, 1, or 2; conversion to action is in the agent, not the dictionary. 
+        fi = self.getFullIndex(state)
         
         w = []
         for tiling in range(self.numTilings):
@@ -67,13 +67,14 @@ class Tiling2D: #Tiling is asymmetric.
         return sum(w)/len(w)
         
 
-    def moveVal(self, x, v, actionIndex, target):
-        fi = self.getFullIndex(x, v)
-        
+    def moveVal(self, state, actionIndex, target):
+        current = self.getVal(state, actionIndex)
+
+        fi = self.getFullIndex(state)        
         w = []
         for tiling in range(self.numTilings):
                 ind = fi[tiling]
-                self.weights[actionIndex][tiling][ind[0], ind[1]] += self.alpha*(target - self.weights[actionIndex][tiling][ind[0], ind[1]])
+                self.weights[actionIndex][tiling][ind[0], ind[1]] += self.alpha*(target - current)
         
         return None
 
