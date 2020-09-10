@@ -3,7 +3,7 @@ from MountainEnvironment import *
 
 class Agent:
 
-    def __init__(self, initial = (-0.5, 0), gamma = 1.0, alpha = 0.5, eps=0.1/8):
+    def __init__(self, initial = (-0.5, 0), gamma = 1.0, alpha = 0.1/8, eps=0.1):
         self.actions = [-1, 0, 1]
 
         self.initial = initial
@@ -43,6 +43,14 @@ class Agent:
     def exploringAction(self): #No need to see env or state info; choose random action.
         return np.random.choice(self.actions)
 
+    def expectation(self, state=None):
+        if type(state) == type(None):
+            state = self.current
+        v = [self.Q.getVal(state, ind) for ind in range(len(self.actions))]
+        re = self.eps*sum(v)/len(v)
+        rg = (1 - self.eps)*max(v)
+        return re + rg
+ 
     def action(self, state=None):
         if type(state) == type(None):
             state = self.current
