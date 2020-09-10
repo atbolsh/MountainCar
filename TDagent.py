@@ -3,7 +3,7 @@ from MountainEnvironment import *
 
 class Agent:
 
-    def __init__(self, initial = (-0.5, 0), gamma = 1.0, alpha = 0.1/8, eps=0.1):
+    def __init__(self, initial = (-0.5, 0), gamma = 1.0, alpha = 0.5, eps=0.01): # Much better with low eps; enough redundancy thanks to low speeds.
         self.actions = [-1, 0, 1]
 
         self.initial = initial
