@@ -12,6 +12,7 @@ class Agent:
         self.alpha = alpha
         self.beta = beta
         self.Rbar = 0
+        self.o = 0 # Using page 57 trick
         self.Q = Tiling2D(alpha=alpha, numActions = len(self.actions))
 
     def reset(self, env=None):
@@ -81,7 +82,8 @@ class Agent:
         newQ = self.Q.getVal(newState, ind2)
 
         delta = R - self.Rbar + newQ - oldQ
-        self.Rbar += self.beta * delta
+        self.o = self.o + self.beta*(1 - self.o) # Page 57 trick
+        self.Rbar += self.beta * delta / self.o
 
         self.Q.moveVal(self.current, ind1, oldQ + delta)
 
