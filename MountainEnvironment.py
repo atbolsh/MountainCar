@@ -35,3 +35,18 @@ class MountainEnvironment:
         return (self.x, self.v), reward
 
 
+class ContinuousME:
+    
+    def __init__(self):
+        self.me = MountainEnvironment()
+   
+    def move(self, state = None, throttle = 0):
+        s, r = self.me.move(state, throttle)
+        if self.me.complete:
+            self.me = MountainEnvironment() # Reset
+            s = (self.me.x, self.me.v)
+            r = 10
+        return s, r
+
+
+
